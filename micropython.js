@@ -14,3 +14,4 @@ Blockly.Python['forever_loop'] = function (block) {
   var statements = Blockly.Python.statementToCode(block, 'DO');
   return `while True:\n${Blockly.Python.prefixLines(statements, '  ')}`;
 };
+
