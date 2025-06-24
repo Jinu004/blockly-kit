@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>STEM Blockly IDE</title>
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        #toolbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        #toolbar button {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        #toolbar button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        #toolbar label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        #toolbar input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 70px);
+        }
+
+        #blocklyDiv {
+            flex: 1;
+            min-width: 60%;
+        }
+
+        #codePanel {
+            flex: 0 0 40%;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #codeHeader {
+            background: #2d2d30;
+            padding: 10px 15px;
+            border-bottom: 1px solid #3e3e42;
+            font-weight: bold;
+        }
+
+        #codeDisplay {
+            flex: 1;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow: auto;
+            white-space: pre;
+            line-height: 1.4;
+        }
+
+        .code-arduino {
+            color: #4ec9b0;
+        }
+
+        .code-python {
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <button onclick="runCode()">▶ Run Code</button>
+        <button onclick="exportCode()">💾 Export</button>
+        <button onclick="clearWorkspace()">🗑️ Clear</button>
+        <label>
+            <input type="checkbox" id="languageToggle" onchange="updateCode()">
+            MicroPython Mode
+        </label>
+    </div>
+
+    <div class="container">
+        <div id="blocklyDiv"></div>
+        <div id="codePanel">
+            <div id="codeHeader">Generated Code</div>
+            <div id="codeDisplay">// Drag blocks to generate code</div>
+        </div>
+    </div>
+
+    <xml id="toolbox" style="display: none">
+        <category name="Hardware" colour="20">
+            <block type="led_control"></block>
+            <block type="buzzer_control"></block>
+            <block type="button_read"></block>
+            <block type="analog_read"></block>
+            <block type="analog_write"></block>
+            <block type="oled_print">
+                <value name="TEXT">
+                    <block type="text">
+                        <field name="TEXT">Hello World!</field>
+                    </block>
+                </value>
+            </block>
+            <block type="delay_ms"></block>
+        </category>
+        <category name="Logic" colour="210">
+            <block type="controls_if"></block>
+            <block type="logic_compare"></block>
+            <block type="logic_operation"></block>
+            <block type="logic_negate"></block>
+            <block type="logic_boolean"></block>
+        </category>
+        <category name="Loops" colour="120">
+            <block type="controls_repeat_ext">
+                <value name="TIMES">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="controls_whileUntil"></block>
+            <block type="controls_for">
+                <value name="FROM">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="TO">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="BY">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+        <category name="Math" colour="230">
+            <block type="math_number">
+                <field name="NUM">123</field>
+            </block>
+            <block type="math_arithmetic">
+                <value name="A">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="B">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_single">
+                <value name="NUM">
+                    <shadow type="math_number">
+                        <field name="NUM">9</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+        <category name="Text" colour="160">
+            <block type="text">
+                <field name="TEXT"></field>
+            </block>
+            <block type="text_join"></block>
+            <block type="text_length">
+                <value name="VALUE">
+                    <shadow type="text">
+                        <field name="TEXT">abc</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+        <category name="Variables" colour="330" custom="VARIABLE"></category>
+        <category name="Functions" colour="290" custom="PROCEDURE"></category>
+    </xml>
+
+    <script>
+        // Define custom blocks
+        Blockly.defineBlocksWithJsonArray([
+            {
+                "type": "buzzer_control",
+                "message0": "Turn buzzer %1",
+                "args0": [
+                    {
+                        "type": "field_dropdown",
+                        "name": "STATE",
+                        "options": [
+                            ["ON", "HIGH"],
+                            ["OFF", "LOW"]
+                        ]
+                    }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Control buzzer",
+                "helpUrl": ""
+            },
+            {
+                "type": "led_control",
+                "message0": "Turn LED %1",
+                "args0": [
+                    {
+                        "type": "field_dropdown",
+                        "name": "STATE",
+                        "options": [
+                            ["ON", "HIGH"],
+                            ["OFF", "LOW"]
+                        ]
+                    }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Turn an LED on or off",
+                "helpUrl": ""
+            },
+            {
+                "type": "button_read",
+                "message0": "Button state on pin %1",
+                "args0": [
+                    {
+                        "type": "field_number",
+                        "name": "PIN",
+                        "value": 2,
+                        "min": 0
+                    }
+                ],
+                "output": "Boolean",
+                "colour": 20,
+                "tooltip": "Reads a digital button input",
+                "helpUrl": ""
+            },
+            {
+                "type": "delay_ms",
+                "message0": "Wait %1 milliseconds",
+                "args0": [
+                    {
+                        "type": "field_number",
+                        "name": "DELAY",
+                        "value": 1000,
+                        "min": 0
+                    }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Delay in milliseconds",
+                "helpUrl": ""
+            },
+            {
+                "type": "analog_read",
+                "message0": "Analog read from pin %1",
+                "args0": [
+                    {
+                        "type": "field_number",
+                        "name": "PIN",
+                        "value": 34,
+                        "min": 0
+                    }
+                ],
+                "output": "Number",
+                "colour": 20,
+                "tooltip": "Reads an analog input (0-4095)",
+                "helpUrl": ""
+            },
+            {
+                "type": "analog_write",
+                "message0": "Analog write to pin %1 value %2",
+                "args0": [
+                    {
+                        "type": "field_number",
+                        "name": "PIN",
+                        "value": 25
+                    },
+                    {
+                        "type": "field_number",
+                        "name": "VALUE",
+                        "value": 128,
+                        "min": 0,
+                        "max": 255
+                    }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Writes a PWM analog output (0-255)",
+                "helpUrl": ""
+            },
+            {
+                "type": "oled_print",
+                "message0": "OLED print %1",
+                "args0": [
+                    {
+                        "type": "input_value",
+                        "name": "TEXT"
+                    }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Print text to OLED screen",
+                "helpUrl": ""
+            }
+        ]);
+
+        // Initialize code generators
+        Blockly.Arduino = Blockly.Arduino || {};
+        Blockly.Python = Blockly.Python || {};
+
+        // Arduino generators
+        Blockly.Arduino['led_control'] = function(block) {
+            var state = block.getFieldValue('STATE');
+            return 'digitalWrite(LED_PIN, ' + state + ');\n';
+        };
+
+        Blockly.Arduino['buzzer_control'] = function(block) {
+            var state = block.getFieldValue('STATE');
+            return 'digitalWrite(BUZZER_PIN, ' + state + ');\n';
+        };
+
+        Blockly.Arduino['button_read'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            return ['digitalRead(' + pin + ')', Blockly.Arduino.ORDER_ATOMIC];
+        };
+
+        Blockly.Arduino['delay_ms'] = function(block) {
+            var delayTime = block.getFieldValue('DELAY');
+            return 'delay(' + delayTime + ');\n';
+        };
+
+        Blockly.Arduino['analog_read'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            return [`analogRead(${pin})`, Blockly.Arduino.ORDER_ATOMIC];
+        };
+
+        Blockly.Arduino['analog_write'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            var value = block.getFieldValue('VALUE');
+            return `analogWrite(${pin}, ${value});\n`;
+        };
+
+        Blockly.Arduino['oled_print'] = function(block) {
+            var input = Blockly.Arduino.valueToCode(block, 'TEXT', Blockly.Arduino.ORDER_ATOMIC) || '""';
+            return `display.print(${input});\ndisplay.display();\n`;
+        };
+
+        // MicroPython generators
+        Blockly.Python['led_control'] = function(block) {
+            var state = block.getFieldValue('STATE') === 'HIGH' ? '1' : '0';
+            return `led.value(${state})\n`;
+        };
+
+        Blockly.Python['buzzer_control'] = function(block) {
+            var state = block.getFieldValue('STATE') === 'HIGH' ? '1' : '0';
+            return `buzzer.value(${state})\n`;
+        };
+
+        Blockly.Python['button_read'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            return [`button_${pin}.value()`, Blockly.Python.ORDER_ATOMIC];
+        };
+
+        Blockly.Python['delay_ms'] = function(block) {
+            var delayTime = block.getFieldValue('DELAY');
+            return `time.sleep_ms(${delayTime})\n`;
+        };
+
+        Blockly.Python['analog_read'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            return [`adc_${pin}.read()`, Blockly.Python.ORDER_ATOMIC];
+        };
+
+        Blockly.Python['analog_write'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            var value = block.getFieldValue('VALUE');
+            return `pwm_${pin}.duty(${Math.round(value * 4)})  # Convert 0-255 to 0-1023\n`;
+        };
+
+        Blockly.Python['oled_print'] = function(block) {
+            var input = Blockly.Python.valueToCode(block, 'TEXT', Blockly.Python.ORDER_ATOMIC) || '""';
+            return `oled.text(str(${input}), 0, 0)\noled.show()\n`;
+        };
+
+        // Initialize workspace
+        const workspace = Blockly.inject('blocklyDiv', {
+            toolbox: document.getElementById('toolbox'),
+            grid: {
+                spacing: 20,
+                length: 3,
+                colour: '#ccc',
+                snap: true
+            },
+            zoom: {
+                controls: true,
+                wheel: true,
+                startScale: 1.0,
+                maxScale: 3,
+                minScale: 0.3,
+                scaleSpeed: 1.2
+            },
+            trashcan: true
+        });
+
+        function getCode() {
+            const isMicroPython = document.getElementById('languageToggle').checked;
+            if (isMicroPython) {
+                let code = Blockly.Python.workspaceToCode(workspace);
+                if (code.trim()) {
+                    code = "# MicroPython Code\nfrom machine import Pin, PWM, ADC, I2C\nimport time\nfrom ssd1306 import SSD1306_I2C\n\n" +
+                           "# Hardware setup\nled = Pin(2, Pin.OUT)\nbuzzer = Pin(4, Pin.OUT)\n" +
+                           "# Add more pin definitions as needed\n\n" + code;
+                }
+                return code;
+            } else {
+                let code = Blockly.Arduino.workspaceToCode(workspace);
+                if (code.trim()) {
+                    code = "// Arduino Code\n#include <Wire.h>\n#include <Adafruit_GFX.h>\n#include <Adafruit_SSD1306.h>\n\n" +
+                           "// Pin definitions\n#define LED_PIN 2\n#define BUZZER_PIN 4\n\n" +
+                           "// OLED display\nAdafruit_SSD1306 display(128, 64, &Wire, -1);\n\n" +
+                           "void setup() {\n  Serial.begin(115200);\n  pinMode(LED_PIN, OUTPUT);\n  pinMode(BUZZER_PIN, OUTPUT);\n  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);\n  display.clearDisplay();\n}\n\n" +
+                           "void loop() {\n" + code + "}\n";
+                }
+                return code;
+            }
+        }
+
+        function updateCode() {
+            const code = getCode();
+            const codeDisplay = document.getElementById('codeDisplay');
+            const isMicroPython = document.getElementById('languageToggle').checked;
+            
+            codeDisplay.textContent = code || (isMicroPython ? '# Drag blocks to generate MicroPython code' : '// Drag blocks to generate Arduino code');
+            codeDisplay.className = isMicroPython ? 'code-python' : 'code-arduino';
+            
+            // Update header
+            document.getElementById('codeHeader').textContent = isMicroPython ? 'Generated MicroPython Code' : 'Generated Arduino Code';
+        }
+
+        function runCode() {
+            const code = getCode();
+            const isMicroPython = document.getElementById('languageToggle').checked;
+            const language = isMicroPython ? 'MicroPython' : 'Arduino';
+            
+            if (!code.trim()) {
+                alert('No code to run! Please add some blocks first.');
+                return;
+            }
+            
+            alert(`🚀 Sending ${language} code to device...\n\nCode preview:\n${code.substring(0, 200)}${code.length > 200 ? '...' : ''}`);
+        }
+
+        function exportCode() {
+            const code = getCode();
+            const isMicroPython = document.getElementById('languageToggle').checked;
+            const extension = isMicroPython ? '.py' : '.ino';
+            const filename = 'blockly_project' + extension;
+            
+            if (!code.trim()) {
+                alert('No code to export! Please add some blocks first.');
+                return;
+            }
+            
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function clearWorkspace() {
+            if (confirm('Are you sure you want to clear all blocks?')) {
+                workspace.clear();
+                updateCode();
+            }
+        }
+
+        // Listen for workspace changes
+        workspace.addChangeListener(updateCode);
+        
+        // Initial code update
+        updateCode();
+    </script>
+</body>
+</html>
