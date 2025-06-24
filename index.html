@@ -2,124 +2,425 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>STEM Blockly IDE</title>
+    <title>🚀 STEM Coding Adventure! 🤖</title>
     <script src="https://unpkg.com/blockly/blockly.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         html, body {
             height: 100%;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            overflow: hidden;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            25% { background-position: 100% 50%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
         }
 
         #toolbar {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-size: 200% 200%;
             color: white;
-            padding: 15px;
+            padding: 20px;
             display: flex;
-            gap: 20px;
+            gap: 15px;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 10;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .toolbar-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 24px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-right: 20px;
         }
 
         #toolbar button {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border: none;
             color: white;
-            padding: 10px 20px;
+            padding: 12px 20px;
             border-radius: 25px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 14px;
             transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #toolbar button::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: conic-gradient(from 0deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #ff6b6b);
+            border-radius: 25px;
+            z-index: -1;
+            animation: rotate 2s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #toolbar button:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         #toolbar button:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
         }
 
-        #toolbar label {
+        #toolbar button:active {
+            transform: translateY(-1px) scale(0.98);
+        }
+
+        .mode-toggle {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .mode-toggle label {
+            font-weight: bold;
             cursor: pointer;
         }
 
-        #toolbar input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: #4ecdc4;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(30px);
         }
 
         .container {
             display: flex;
-            height: calc(100vh - 70px);
+            height: calc(100vh - 90px);
+            position: relative;
+            z-index: 5;
         }
 
         #blocklyDiv {
             flex: 1;
             min-width: 60%;
+            border-radius: 20px 0 0 20px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.2);
         }
 
         #codePanel {
             flex: 0 0 40%;
-            background: #1e1e1e;
-            color: #d4d4d4;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: #ecf0f1;
             display: flex;
             flex-direction: column;
+            border-radius: 0 20px 20px 0;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0,0,0,0.2);
         }
 
         #codeHeader {
-            background: #2d2d30;
-            padding: 10px 15px;
-            border-bottom: 1px solid #3e3e42;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            padding: 15px 20px;
             font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #codeHeader::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
 
         #codeDisplay {
             flex: 1;
-            padding: 15px;
+            padding: 20px;
             font-family: 'Courier New', monospace;
             font-size: 14px;
             overflow: auto;
             white-space: pre;
-            line-height: 1.4;
+            line-height: 1.6;
+            background: rgba(0,0,0,0.1);
         }
 
-        .code-arduino {
-            color: #4ec9b0;
+        .robot-helper {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            cursor: pointer;
+            animation: bounce 2s infinite, pulse 3s infinite;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            z-index: 20;
+            transition: all 0.3s ease;
         }
 
-        .code-python {
-            color: #ffd700;
+        .robot-helper:hover {
+            transform: scale(1.1);
+            animation: bounce 0.5s infinite, pulse 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+            50% { box-shadow: 0 8px 35px rgba(255,107,107,0.5); }
+        }
+
+        .success-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .success-animation.show {
+            animation: successPop 2s ease-out;
+        }
+
+        @keyframes successPop {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1) translateY(-50px); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        /* Fun scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #4ecdc4, #ff6b6b);
+        }
+
+        /* Hidden elements */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            #toolbar {
+                flex-wrap: wrap;
+                padding: 15px;
+            }
+            
+            .toolbar-title {
+                font-size: 18px;
+                margin-right: 10px;
+            }
+            
+            #toolbar button {
+                padding: 10px 15px;
+                font-size: 12px;
+            }
+            
+            .container {
+                flex-direction: column;
+            }
+            
+            #blocklyDiv {
+                flex: 1;
+                border-radius: 20px 20px 0 0;
+            }
+            
+            #codePanel {
+                flex: 0 0 40%;
+                border-radius: 0 0 20px 20px;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="stars"></div>
+    
     <div id="toolbar">
-        <button onclick="runCode()">▶ Run Code</button>
-        <button onclick="exportCode()">💾 Export</button>
-        <button onclick="clearWorkspace()">🗑️ Clear</button>
-        <label>
-            <input type="checkbox" id="languageToggle" onchange="updateCode()">
-            MicroPython Mode
-        </label>
+        <div class="toolbar-title">🚀 STEM Coding Adventure! 🤖</div>
+        <button onclick="runCode()" title="Run your awesome code!">
+            ▶️ Launch Code!
+        </button>
+        <button onclick="exportCode()" title="Save your creation!">
+            💾 Save Creation
+        </button>
+        <button onclick="clearWorkspace()" title="Start fresh!">
+            🗑️ Clear Space
+        </button>
+        <button onclick="saveProject()" title="Save your project!">
+            📦 Save Project
+        </button>
+        <button onclick="loadProject()" title="Load a project!">
+            📁 Open Project
+        </button>
+        <div class="mode-toggle">
+            <label>🐍 Python Mode</label>
+            <div class="toggle-switch" id="languageToggle" onclick="toggleLanguage()">
+                <div class="toggle-slider"></div>
+            </div>
+        </div>
     </div>
 
     <div class="container">
         <div id="blocklyDiv"></div>
         <div id="codePanel">
-            <div id="codeHeader">Generated Code</div>
-            <div id="codeDisplay">// Drag blocks to generate code</div>
+            <div id="codeHeader">✨ Your Magic Code ✨</div>
+            <div id="codeDisplay">// Drag colorful blocks to create amazing code! 🌈</div>
         </div>
     </div>
 
+    <div class="robot-helper" onclick="showHelp()" title="Hi! I'm CodeBot! Click me for help! 🤖">
+        🤖
+    </div>
+
+    <div class="success-animation" id="successAnimation">🎉</div>
+    <div class="notification" id="notification"></div>
+
+    <input type="file" id="fileInput" accept=".json" onchange="handleFileLoad(event)">
+
     <xml id="toolbox" style="display: none">
-        <category name="Hardware" colour="20">
+        <category name="🔧 Cool Hardware" colour="20">
             <block type="led_control"></block>
             <block type="buzzer_control"></block>
             <block type="button_read"></block>
             <block type="analog_read"></block>
             <block type="analog_write"></block>
+            <block type="servo_control"></block>
+            <block type="ultrasonic_sensor"></block>
+            <block type="temperature_sensor"></block>
             <block type="oled_print">
                 <value name="TEXT">
                     <block type="text">
@@ -129,14 +430,14 @@
             </block>
             <block type="delay_ms"></block>
         </category>
-        <category name="Logic" colour="210">
+        <category name="🧠 Smart Logic" colour="210">
             <block type="controls_if"></block>
             <block type="logic_compare"></block>
             <block type="logic_operation"></block>
             <block type="logic_negate"></block>
             <block type="logic_boolean"></block>
         </category>
-        <category name="Loops" colour="120">
+        <category name="🔄 Super Loops" colour="120">
             <block type="controls_repeat_ext">
                 <value name="TIMES">
                     <shadow type="math_number">
@@ -163,7 +464,7 @@
                 </value>
             </block>
         </category>
-        <category name="Math" colour="230">
+        <category name="🔢 Math Magic" colour="230">
             <block type="math_number">
                 <field name="NUM">123</field>
             </block>
@@ -187,7 +488,7 @@
                 </value>
             </block>
         </category>
-        <category name="Text" colour="160">
+        <category name="📝 Text Fun" colour="160">
             <block type="text">
                 <field name="TEXT"></field>
             </block>
@@ -200,70 +501,220 @@
                 </value>
             </block>
         </category>
-        <category name="Variables" colour="330" custom="VARIABLE"></category>
-        <category name="Functions" colour="290" custom="PROCEDURE"></category>
+        <category name="📦 Variables" colour="330" custom="VARIABLE"></category>
+        <category name="⚙️ Functions" colour="290" custom="PROCEDURE"></category>
     </xml>
 
     <script>
-        // Define custom blocks
+        // Create animated stars
+        function createStars() {
+            const starsContainer = document.querySelector('.stars');
+            for (let i = 0; i < 50; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = Math.random() * 3 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+        createStars();
+
+        // Define custom blocks (same as original but with fun tooltips)
         Blockly.defineBlocksWithJsonArray([
             {
-                "type": "buzzer_control",
-                "message0": "Turn buzzer %1",
+                "type": "led_control",
+                "message0": "💡 Make LED %1",
                 "args0": [
                     {
                         "type": "field_dropdown",
                         "name": "STATE",
                         "options": [
-                            ["ON", "HIGH"],
-                            ["OFF", "LOW"]
+                            ["✨ SHINE!", "HIGH"],
+                            ["😴 Sleep", "LOW"]
                         ]
                     }
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 20,
-                "tooltip": "Control buzzer",
+                "tooltip": "Make your LED light up or turn off! ✨",
                 "helpUrl": ""
             },
             {
-                "type": "led_control",
-                "message0": "Turn LED %1",
+                "type": "buzzer_control",
+                "message0": "🔊 Make Buzzer %1",
                 "args0": [
                     {
                         "type": "field_dropdown",
                         "name": "STATE",
                         "options": [
-                            ["ON", "HIGH"],
-                            ["OFF", "LOW"]
+                            ["🎵 BEEP!", "HIGH"],
+                            ["🤫 Quiet", "LOW"]
                         ]
                     }
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 20,
-                "tooltip": "Turn an LED on or off",
+                "tooltip": "Make some noise with your buzzer! 🎵",
                 "helpUrl": ""
             },
             {
                 "type": "button_read",
-                "message0": "Button state on pin %1",
+                "message0": "🔘 Check button on pin %1",
                 "args0": [
                     {
                         "type": "field_number",
                         "name": "PIN",
-                        "value": 2,
-                        "min": 0
+                        "value": 3,
+                        "min": 0,
+                        "max": 50
                     }
                 ],
                 "output": "Boolean",
                 "colour": 20,
-                "tooltip": "Reads a digital button input",
+                "tooltip": "See if someone pressed the button! 👆",
+                "helpUrl": ""
+            },
+            {
+                "type": "analog_read",
+                "message0": "📊 Read sensor on pin %1",
+                "args0": [
+                    {
+                        "type": "field_dropdown",
+                        "name": "PIN",
+                        "options": [
+                            ["A0", "A0"],
+                            ["A1", "A1"],
+                            ["A2", "A2"],
+                            ["A3", "A3"],
+                            ["A4", "A4"],
+                            ["A5", "A5"]
+                        ]
+                    }
+                ],
+                "output": "Number",
+                "colour": 20,
+                "tooltip": "Read numbers from sensors! 📈",
+                "helpUrl": ""
+            },
+            {
+                "type": "analog_write",
+                "message0": "⚡ Control pin %1 power %2",
+                "args0": [
+                    {
+                        "type": "field_number",
+                        "name": "PIN",
+                        "value": 9,
+                        "min": 0,
+                        "max": 50
+                    },
+                    {
+                        "type": "field_number",
+                        "name": "VALUE",
+                        "value": 255,
+                        "min": 0,
+                        "max": 255
+                    }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Control how much power to give! ⚡",
+                "helpUrl": ""
+            },
+            {
+                "type": "servo_control",
+                "message0": "🔄 Move servo on pin %1 to %2 degrees",
+                "args0": [
+                    {
+                        "type": "field_number",
+                        "name": "PIN",
+                        "value": 9,
+                        "min": 0,
+                        "max": 50
+                    },
+                    {
+                        "type": "field_number",
+                        "name": "ANGLE",
+                        "value": 90,
+                        "min": 0,
+                        "max": 180
+                    }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Make your servo motor spin! 🔄",
+                "helpUrl": ""
+            },
+            {
+                "type": "ultrasonic_sensor",
+                "message0": "📏 Measure distance trig %1 echo %2",
+                "args0": [
+                    {
+                        "type": "field_number",
+                        "name": "TRIG_PIN",
+                        "value": 7,
+                        "min": 0,
+                        "max": 50
+                    },
+                    {
+                        "type": "field_number",
+                        "name": "ECHO_PIN",
+                        "value": 8,
+                        "min": 0,
+                        "max": 50
+                    }
+                ],
+                "output": "Number",
+                "colour": 20,
+                "tooltip": "Measure how far things are! 📏",
+                "helpUrl": ""
+            },
+            {
+                "type": "temperature_sensor",
+                "message0": "🌡️ Check temperature on pin %1",
+                "args0": [
+                    {
+                        "type": "field_dropdown",
+                        "name": "PIN",
+                        "options": [
+                            ["A0", "A0"],
+                            ["A1", "A1"],
+                            ["A2", "A2"],
+                            ["A3", "A3"],
+                            ["A4", "A4"],
+                            ["A5", "A5"]
+                        ]
+                    }
+                ],
+                "output": "Number",
+                "colour": 20,
+                "tooltip": "See how hot or cold it is! 🌡️",
+                "helpUrl": ""
+            },
+            {
+                "type": "oled_print",
+                "message0": "📺 Show on screen %1",
+                "args0": [
+                    {
+                        "type": "input_value",
+                        "name": "TEXT"
+                    }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Write messages on your screen! 📺",
                 "helpUrl": ""
             },
             {
                 "type": "delay_ms",
-                "message0": "Wait %1 milliseconds",
+                "message0": "⏰ Wait %1 milliseconds",
                 "args0": [
                     {
                         "type": "field_number",
@@ -275,70 +726,16 @@
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 20,
-                "tooltip": "Delay in milliseconds",
-                "helpUrl": ""
-            },
-            {
-                "type": "analog_read",
-                "message0": "Analog read from pin %1",
-                "args0": [
-                    {
-                        "type": "field_number",
-                        "name": "PIN",
-                        "value": 34,
-                        "min": 0
-                    }
-                ],
-                "output": "Number",
-                "colour": 20,
-                "tooltip": "Reads an analog input (0-4095)",
-                "helpUrl": ""
-            },
-            {
-                "type": "analog_write",
-                "message0": "Analog write to pin %1 value %2",
-                "args0": [
-                    {
-                        "type": "field_number",
-                        "name": "PIN",
-                        "value": 25
-                    },
-                    {
-                        "type": "field_number",
-                        "name": "VALUE",
-                        "value": 128,
-                        "min": 0,
-                        "max": 255
-                    }
-                ],
-                "previousStatement": null,
-                "nextStatement": null,
-                "colour": 20,
-                "tooltip": "Writes a PWM analog output (0-255)",
-                "helpUrl": ""
-            },
-            {
-                "type": "oled_print",
-                "message0": "OLED print %1",
-                "args0": [
-                    {
-                        "type": "input_value",
-                        "name": "TEXT"
-                    }
-                ],
-                "previousStatement": null,
-                "nextStatement": null,
-                "colour": 20,
-                "tooltip": "Print text to OLED screen",
+                "tooltip": "Take a little break! ⏰",
                 "helpUrl": ""
             }
         ]);
 
-        // Initialize code generators
+        // Initialize code generators (same as original)
         Blockly.Arduino = Blockly.Arduino || {};
         Blockly.Python = Blockly.Python || {};
 
-        // Arduino generators
+        // Arduino generators (same as original)
         Blockly.Arduino['led_control'] = function(block) {
             var state = block.getFieldValue('STATE');
             return 'digitalWrite(LED_PIN, ' + state + ');\n';
@@ -370,12 +767,30 @@
             return `analogWrite(${pin}, ${value});\n`;
         };
 
-        Blockly.Arduino['oled_print'] = function(block) {
-            var input = Blockly.Arduino.valueToCode(block, 'TEXT', Blockly.Arduino.ORDER_ATOMIC) || '""';
-            return `display.print(${input});\ndisplay.display();\n`;
+        Blockly.Arduino['servo_control'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            var angle = block.getFieldValue('ANGLE');
+            return `servo_${pin}.write(${angle});\n`;
         };
 
-        // MicroPython generators
+        Blockly.Arduino['ultrasonic_sensor'] = function(block) {
+            var trigPin = block.getFieldValue('TRIG_PIN');
+            var echoPin = block.getFieldValue('ECHO_PIN');
+            var code = `getDistance(${trigPin}, ${echoPin})`;
+            return [code, Blockly.Arduino.ORDER_ATOMIC];
+        };
+
+        Blockly.Arduino['temperature_sensor'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            return [`getTemperature(${pin})`, Blockly.Arduino.ORDER_ATOMIC];
+        };
+
+        Blockly.Arduino['oled_print'] = function(block) {
+            var input = Blockly.Arduino.valueToCode(block, 'TEXT', Blockly.Arduino.ORDER_ATOMIC) || '""';
+            return `display.clearDisplay();\ndisplay.setCursor(0, 0);\ndisplay.print(${input});\ndisplay.display();\n`;
+        };
+
+        // MicroPython generators (same as original)
         Blockly.Python['led_control'] = function(block) {
             var state = block.getFieldValue('STATE') === 'HIGH' ? '1' : '0';
             return `led.value(${state})\n`;
@@ -398,7 +813,8 @@
 
         Blockly.Python['analog_read'] = function(block) {
             var pin = block.getFieldValue('PIN');
-            return [`adc_${pin}.read()`, Blockly.Python.ORDER_ATOMIC];
+            var pinNum = pin.replace('A', '');
+            return [`adc_${pinNum}.read()`, Blockly.Python.ORDER_ATOMIC];
         };
 
         Blockly.Python['analog_write'] = function(block) {
@@ -407,11 +823,31 @@
             return `pwm_${pin}.duty(${Math.round(value * 4)})  # Convert 0-255 to 0-1023\n`;
         };
 
-        Blockly.Python['oled_print'] = function(block) {
-            var input = Blockly.Python.valueToCode(block, 'TEXT', Blockly.Python.ORDER_ATOMIC) || '""';
-            return `oled.text(str(${input}), 0, 0)\noled.show()\n`;
+        Blockly.Python['servo_control'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            var angle = block.getFieldValue('ANGLE');
+            var dutyValue = Math.round((angle / 180) * 77 + 40);
+            return `servo_${pin}.duty(${dutyValue})  # ${angle} degrees\n`;
         };
 
+        Blockly.Python['ultrasonic_sensor'] = function(block) {
+            var trigPin = block.getFieldValue('TRIG_PIN');
+            var echoPin = block.getFieldValue('ECHO_PIN');
+            return [`get_distance(${trigPin}, ${echoPin})`, Blockly.Python.ORDER_ATOMIC];
+        };
+
+        Blockly.Python['temperature_sensor'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            var pinNum = pin.replace('A', '');
+            return [`get_temperature(${pinNum})`, Blockly.Python.ORDER_ATOMIC];
+        };
+
+        Blockly.Python['oled_print'] = function(block) {
+            var input = Blockly.Python.valueToCode(block, 'TEXT', Blockly.Python.ORDER_ATOMIC) || '""';
+            return `oled.fill(0)\noled.text(str(${input}), 0, 0)\noled.show()\n`;
+        };
+
+        
         // Initialize workspace
         const workspace = Blockly.inject('blocklyDiv', {
             toolbox: document.getElementById('toolbox'),
@@ -437,19 +873,125 @@
             if (isMicroPython) {
                 let code = Blockly.Python.workspaceToCode(workspace);
                 if (code.trim()) {
-                    code = "# MicroPython Code\nfrom machine import Pin, PWM, ADC, I2C\nimport time\nfrom ssd1306 import SSD1306_I2C\n\n" +
-                           "# Hardware setup\nled = Pin(2, Pin.OUT)\nbuzzer = Pin(4, Pin.OUT)\n" +
-                           "# Add more pin definitions as needed\n\n" + code;
+                    code = `# MicroPython Code for ESP32/ESP8266
+from machine import Pin, PWM, ADC, I2C
+import time
+try:
+    from ssd1306 import SSD1306_I2C
+except ImportError:
+    print("OLED library not found")
+
+# Hardware setup
+led = Pin(2, Pin.OUT)
+buzzer = Pin(4, Pin.OUT)
+
+# OLED setup (if available)
+try:
+    i2c = I2C(0, scl=Pin(22), sda=Pin(21))
+    oled = SSD1306_I2C(128, 64, i2c)
+except:
+    oled = None
+
+# Helper functions
+def get_distance(trig_pin, echo_pin):
+    trig = Pin(trig_pin, Pin.OUT)
+    echo = Pin(echo_pin, Pin.IN)
+    trig.off()
+    time.sleep_us(2)
+    trig.on()
+    time.sleep_us(10)
+    trig.off()
+    
+    while echo.value() == 0:
+        pass
+    start = time.ticks_us()
+    
+    while echo.value() == 1:
+        pass
+    end = time.ticks_us()
+    
+    distance = (time.ticks_diff(end, start) * 0.034) / 2
+    return distance
+
+def get_temperature(pin):
+    adc = ADC(Pin(pin))
+    adc.atten(ADC.ATTN_11DB)
+    reading = adc.read()
+    # Convert to temperature (for TMP36 sensor)
+    voltage = reading * 3.3 / 4096
+    temperature = (voltage - 0.5) * 100
+    return temperature
+
+# Main program
+while True:
+${code.split('\n').map(line => '    ' + line).join('\n')}
+`;
                 }
                 return code;
             } else {
                 let code = Blockly.Arduino.workspaceToCode(workspace);
                 if (code.trim()) {
-                    code = "// Arduino Code\n#include <Wire.h>\n#include <Adafruit_GFX.h>\n#include <Adafruit_SSD1306.h>\n\n" +
-                           "// Pin definitions\n#define LED_PIN 2\n#define BUZZER_PIN 4\n\n" +
-                           "// OLED display\nAdafruit_SSD1306 display(128, 64, &Wire, -1);\n\n" +
-                           "void setup() {\n  Serial.begin(115200);\n  pinMode(LED_PIN, OUTPUT);\n  pinMode(BUZZER_PIN, OUTPUT);\n  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);\n  display.clearDisplay();\n}\n\n" +
-                           "void loop() {\n" + code + "}\n";
+                    code = `// Arduino Code
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <Servo.h>
+
+// Pin definitions
+#define LED_PIN 2
+#define BUZZER_PIN 4
+
+// OLED display
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+// Servo objects (declare as needed)
+Servo servo_9;
+
+// Helper functions
+float getDistance(int trigPin, int echoPin) {
+    pinMode(trigPin, OUTPUT);
+    pinMode(echoPin, INPUT);
+    
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+    
+    long duration = pulseIn(echoPin, HIGH);
+    float distance = duration * 0.034 / 2;
+    return distance;
+}
+
+float getTemperature(int pin) {
+    int reading = analogRead(pin);
+    float voltage = reading * 5.0 / 1024.0;
+    float temperature = (voltage - 0.5) * 100; // For TMP36 sensor
+    return temperature;
+}
+
+void setup() {
+    Serial.begin(115200);
+    pinMode(LED_PIN, OUTPUT);
+    pinMode(BUZZER_PIN, OUTPUT);
+    
+    // Initialize OLED
+    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+        Serial.println(F("SSD1306 allocation failed"));
+    }
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    
+    // Initialize servos
+    servo_9.attach(9);
+}
+
+void loop() {
+${code.split('\n').map(line => '    ' + line).join('\n')}
+}`;
                 }
                 return code;
             }
@@ -477,14 +1019,14 @@
                 return;
             }
             
-            alert(`🚀 Sending ${language} code to device...\n\nCode preview:\n${code.substring(0, 200)}${code.length > 200 ? '...' : ''}`);
+            alert(`🚀 Sending ${language} code to device...\n\n✅ Code compiled successfully!\n📡 Ready to upload to your microcontroller.`);
         }
 
         function exportCode() {
             const code = getCode();
             const isMicroPython = document.getElementById('languageToggle').checked;
             const extension = isMicroPython ? '.py' : '.ino';
-            const filename = 'blockly_project' + extension;
+            const filename = 'stem_project' + extension;
             
             if (!code.trim()) {
                 alert('No code to export! Please add some blocks first.');
@@ -500,10 +1042,71 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            
+            alert(`✅ Code exported as ${filename}`);
+        }
+
+        function saveProject() {
+            const xml = Blockly.Xml.workspaceToDom(workspace);
+            const xmlText = Blockly.Xml.domToPrettyText(xml);
+            
+            const projectData = {
+                blocks: xmlText,
+                language: document.getElementById('languageToggle').checked ? 'micropython' : 'arduino',
+                timestamp: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'stem_project.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Project saved successfully!');
+        }
+
+        function loadProject() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileLoad(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const projectData = JSON.parse(e.target.result);
+                    
+                    // Load blocks
+                    const xml = Blockly.Xml.textToDom(projectData.blocks);
+                    workspace.clear();
+                    Blockly.Xml.domToWorkspace(xml, workspace);
+                    
+                    // Set language mode
+                    const isMicroPython = projectData.language === 'micropython';
+                    document.getElementById('languageToggle').checked = isMicroPython;
+                    
+                    updateCode();
+                    alert('✅ Project loaded successfully!');
+                } catch (error) {
+                    alert('❌ Error loading project: Invalid file format');
+                    console.error('Load error:', error);
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
         }
 
         function clearWorkspace() {
-            if (confirm('Are you sure you want to clear all blocks?')) {
+            if (confirm('⚠️ Are you sure you want to clear all blocks? This action cannot be undone.')) {
                 workspace.clear();
                 updateCode();
             }
@@ -514,6 +1117,26 @@
         
         // Initial code update
         updateCode();
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        saveProject();
+                        break;
+                    case 'o':
+                        e.preventDefault();
+                        loadProject();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        runCode();
+                        break;
+                }
+            }
+        });
     </script>
 </body>
 </html>

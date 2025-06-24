@@ -23,25 +23,24 @@ Blockly.defineBlocksWithJsonArray([
   },
 //led
   {
-  "type": "led_toggle",
-  "message0": "LED %1",
-  "args0": [
-    {
-      "type": "field_dropdown",
-      "name": "STATE",
-      "options": [
-        ["ON", "HIGH"],
-        ["OFF", "LOW"]
-      ]
-    }
-  ],
-  "previousStatement": null,
-  "nextStatement": null,
-  "colour": 230,
-  "tooltip": "Toggle LED on/off",
-  "helpUrl": ""
-},
-
+    "type": "led_control",
+    "message0": "Turn LED %1",
+    "args0": [
+      {
+        "type": "field_dropdown",
+        "name": "STATE",
+        "options": [
+          ["ON", "HIGH"],
+          ["OFF", "LOW"]
+        ]
+      }
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 230,
+    "tooltip": "Turn an LED on or off",
+    "helpUrl": ""
+  },
 
   // Button Input Block
   {
