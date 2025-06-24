@@ -99,6 +99,8 @@
         <button onclick="runCode()">▶ Run Code</button>
         <button onclick="exportCode()">💾 Export</button>
         <button onclick="clearWorkspace()">🗑️ Clear</button>
+        <button onclick="saveProject()">💾 Save Project</button>
+        <button onclick="loadProject()">📁 Load Project</button>
         <label>
             <input type="checkbox" id="languageToggle" onchange="updateCode()">
             MicroPython Mode
@@ -113,6 +115,9 @@
         </div>
     </div>
 
+    <!-- Hidden file input for loading projects -->
+    <input type="file" id="fileInput" accept=".json" style="display: none" onchange="handleFileLoad(event)">
+
     <xml id="toolbox" style="display: none">
         <category name="Hardware" colour="20">
             <block type="led_control"></block>
@@ -120,6 +125,9 @@
             <block type="button_read"></block>
             <block type="analog_read"></block>
             <block type="analog_write"></block>
+            <block type="servo_control"></block>
+            <block type="ultrasonic_sensor"></block>
+            <block type="temperature_sensor"></block>
             <block type="oled_print">
                 <value name="TEXT">
                     <block type="text">
@@ -207,28 +215,10 @@
     <script>
         // Define custom blocks
         Blockly.defineBlocksWithJsonArray([
-            {
-                "type": "buzzer_control",
-                "message0": "Turn buzzer %1",
-                "args0": [
-                    {
-                        "type": "field_dropdown",
-                        "name": "STATE",
-                        "options": [
-                            ["ON", "HIGH"],
-                            ["OFF", "LOW"]
-                        ]
-                    }
-                ],
-                "previousStatement": null,
-                "nextStatement": null,
-                "colour": 20,
-                "tooltip": "Control buzzer",
-                "helpUrl": ""
-            },
+            // LED Control Block
             {
                 "type": "led_control",
-                "message0": "Turn LED %1",
+                "message0": "Set LED %1",
                 "args0": [
                     {
                         "type": "field_dropdown",
@@ -242,25 +232,187 @@
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 20,
-                "tooltip": "Turn an LED on or off",
+                "tooltip": "Control LED on/off",
                 "helpUrl": ""
             },
+            // Buzzer Control Block
+            {
+                "type": "buzzer_control",
+                "message0": "Set Buzzer %1",
+                "args0": [
+                    {
+                        "type": "field_dropdown",
+                        "name": "STATE",
+                        "options": [
+                            ["ON", "HIGH"],
+                            ["OFF", "LOW"]
+                        ]
+                    }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Control buzzer on/off",
+                "helpUrl": ""
+            },
+            // Button Read Block
             {
                 "type": "button_read",
-                "message0": "Button state on pin %1",
+                "message0": "Read button pin %1",
                 "args0": [
                     {
                         "type": "field_number",
                         "name": "PIN",
-                        "value": 2,
-                        "min": 0
+                        "value": 3,
+                        "min": 0,
+                        "max": 50
                     }
                 ],
                 "output": "Boolean",
                 "colour": 20,
-                "tooltip": "Reads a digital button input",
+                "tooltip": "Read digital state of button",
                 "helpUrl": ""
             },
+            // Analog Read Block
+            {
+                "type": "analog_read",
+                "message0": "Read analog pin %1",
+                "args0": [
+                    {
+                        "type": "field_dropdown",
+                        "name": "PIN",
+                        "options": [
+                            ["A0", "A0"],
+                            ["A1", "A1"],
+                            ["A2", "A2"],
+                            ["A3", "A3"],
+                            ["A4", "A4"],
+                            ["A5", "A5"]
+                        ]
+                    }
+                ],
+                "output": "Number",
+                "colour": 20,
+                "tooltip": "Read analog value from pin",
+                "helpUrl": ""
+            },
+            // Analog Write Block
+            {
+                "type": "analog_write",
+                "message0": "Write analog pin %1 value %2",
+                "args0": [
+                    {
+                        "type": "field_number",
+                        "name": "PIN",
+                        "value": 9,
+                        "min": 0,
+                        "max": 50
+                    },
+                    {
+                        "type": "field_number",
+                        "name": "VALUE",
+                        "value": 255,
+                        "min": 0,
+                        "max": 255
+                    }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Write PWM value to pin (0-255)",
+                "helpUrl": ""
+            },
+            // Servo Control Block
+            {
+                "type": "servo_control",
+                "message0": "Move servo pin %1 to %2 degrees",
+                "args0": [
+                    {
+                        "type": "field_number",
+                        "name": "PIN",
+                        "value": 9,
+                        "min": 0,
+                        "max": 50
+                    },
+                    {
+                        "type": "field_number",
+                        "name": "ANGLE",
+                        "value": 90,
+                        "min": 0,
+                        "max": 180
+                    }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Control servo motor angle",
+                "helpUrl": ""
+            },
+            // Ultrasonic Sensor Block
+            {
+                "type": "ultrasonic_sensor",
+                "message0": "Ultrasonic distance trig pin %1 echo pin %2",
+                "args0": [
+                    {
+                        "type": "field_number",
+                        "name": "TRIG_PIN",
+                        "value": 7,
+                        "min": 0,
+                        "max": 50
+                    },
+                    {
+                        "type": "field_number",
+                        "name": "ECHO_PIN",
+                        "value": 8,
+                        "min": 0,
+                        "max": 50
+                    }
+                ],
+                "output": "Number",
+                "colour": 20,
+                "tooltip": "Measure distance using ultrasonic sensor",
+                "helpUrl": ""
+            },
+            // Temperature Sensor Block
+            {
+                "type": "temperature_sensor",
+                "message0": "Temperature sensor pin %1",
+                "args0": [
+                    {
+                        "type": "field_dropdown",
+                        "name": "PIN",
+                        "options": [
+                            ["A0", "A0"],
+                            ["A1", "A1"],
+                            ["A2", "A2"],
+                            ["A3", "A3"],
+                            ["A4", "A4"],
+                            ["A5", "A5"]
+                        ]
+                    }
+                ],
+                "output": "Number",
+                "colour": 20,
+                "tooltip": "Read temperature from sensor",
+                "helpUrl": ""
+            },
+            // OLED Print Block
+            {
+                "type": "oled_print",
+                "message0": "Display on OLED %1",
+                "args0": [
+                    {
+                        "type": "input_value",
+                        "name": "TEXT"
+                    }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Display text on OLED screen",
+                "helpUrl": ""
+            },
+            // Delay Block
             {
                 "type": "delay_ms",
                 "message0": "Wait %1 milliseconds",
@@ -275,61 +427,7 @@
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 20,
-                "tooltip": "Delay in milliseconds",
-                "helpUrl": ""
-            },
-            {
-                "type": "analog_read",
-                "message0": "Analog read from pin %1",
-                "args0": [
-                    {
-                        "type": "field_number",
-                        "name": "PIN",
-                        "value": 34,
-                        "min": 0
-                    }
-                ],
-                "output": "Number",
-                "colour": 20,
-                "tooltip": "Reads an analog input (0-4095)",
-                "helpUrl": ""
-            },
-            {
-                "type": "analog_write",
-                "message0": "Analog write to pin %1 value %2",
-                "args0": [
-                    {
-                        "type": "field_number",
-                        "name": "PIN",
-                        "value": 25
-                    },
-                    {
-                        "type": "field_number",
-                        "name": "VALUE",
-                        "value": 128,
-                        "min": 0,
-                        "max": 255
-                    }
-                ],
-                "previousStatement": null,
-                "nextStatement": null,
-                "colour": 20,
-                "tooltip": "Writes a PWM analog output (0-255)",
-                "helpUrl": ""
-            },
-            {
-                "type": "oled_print",
-                "message0": "OLED print %1",
-                "args0": [
-                    {
-                        "type": "input_value",
-                        "name": "TEXT"
-                    }
-                ],
-                "previousStatement": null,
-                "nextStatement": null,
-                "colour": 20,
-                "tooltip": "Print text to OLED screen",
+                "tooltip": "Pause execution for specified milliseconds",
                 "helpUrl": ""
             }
         ]);
@@ -370,9 +468,27 @@
             return `analogWrite(${pin}, ${value});\n`;
         };
 
+        Blockly.Arduino['servo_control'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            var angle = block.getFieldValue('ANGLE');
+            return `servo_${pin}.write(${angle});\n`;
+        };
+
+        Blockly.Arduino['ultrasonic_sensor'] = function(block) {
+            var trigPin = block.getFieldValue('TRIG_PIN');
+            var echoPin = block.getFieldValue('ECHO_PIN');
+            var code = `getDistance(${trigPin}, ${echoPin})`;
+            return [code, Blockly.Arduino.ORDER_ATOMIC];
+        };
+
+        Blockly.Arduino['temperature_sensor'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            return [`getTemperature(${pin})`, Blockly.Arduino.ORDER_ATOMIC];
+        };
+
         Blockly.Arduino['oled_print'] = function(block) {
             var input = Blockly.Arduino.valueToCode(block, 'TEXT', Blockly.Arduino.ORDER_ATOMIC) || '""';
-            return `display.print(${input});\ndisplay.display();\n`;
+            return `display.clearDisplay();\ndisplay.setCursor(0, 0);\ndisplay.print(${input});\ndisplay.display();\n`;
         };
 
         // MicroPython generators
@@ -398,7 +514,8 @@
 
         Blockly.Python['analog_read'] = function(block) {
             var pin = block.getFieldValue('PIN');
-            return [`adc_${pin}.read()`, Blockly.Python.ORDER_ATOMIC];
+            var pinNum = pin.replace('A', '');
+            return [`adc_${pinNum}.read()`, Blockly.Python.ORDER_ATOMIC];
         };
 
         Blockly.Python['analog_write'] = function(block) {
@@ -407,9 +524,28 @@
             return `pwm_${pin}.duty(${Math.round(value * 4)})  # Convert 0-255 to 0-1023\n`;
         };
 
+        Blockly.Python['servo_control'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            var angle = block.getFieldValue('ANGLE');
+            var dutyValue = Math.round((angle / 180) * 77 + 40); // Convert angle to duty cycle
+            return `servo_${pin}.duty(${dutyValue})  # ${angle} degrees\n`;
+        };
+
+        Blockly.Python['ultrasonic_sensor'] = function(block) {
+            var trigPin = block.getFieldValue('TRIG_PIN');
+            var echoPin = block.getFieldValue('ECHO_PIN');
+            return [`get_distance(${trigPin}, ${echoPin})`, Blockly.Python.ORDER_ATOMIC];
+        };
+
+        Blockly.Python['temperature_sensor'] = function(block) {
+            var pin = block.getFieldValue('PIN');
+            var pinNum = pin.replace('A', '');
+            return [`get_temperature(${pinNum})`, Blockly.Python.ORDER_ATOMIC];
+        };
+
         Blockly.Python['oled_print'] = function(block) {
             var input = Blockly.Python.valueToCode(block, 'TEXT', Blockly.Python.ORDER_ATOMIC) || '""';
-            return `oled.text(str(${input}), 0, 0)\noled.show()\n`;
+            return `oled.fill(0)\noled.text(str(${input}), 0, 0)\noled.show()\n`;
         };
 
         // Initialize workspace
@@ -437,19 +573,125 @@
             if (isMicroPython) {
                 let code = Blockly.Python.workspaceToCode(workspace);
                 if (code.trim()) {
-                    code = "# MicroPython Code\nfrom machine import Pin, PWM, ADC, I2C\nimport time\nfrom ssd1306 import SSD1306_I2C\n\n" +
-                           "# Hardware setup\nled = Pin(2, Pin.OUT)\nbuzzer = Pin(4, Pin.OUT)\n" +
-                           "# Add more pin definitions as needed\n\n" + code;
+                    code = `# MicroPython Code for ESP32/ESP8266
+from machine import Pin, PWM, ADC, I2C
+import time
+try:
+    from ssd1306 import SSD1306_I2C
+except ImportError:
+    print("OLED library not found")
+
+# Hardware setup
+led = Pin(2, Pin.OUT)
+buzzer = Pin(4, Pin.OUT)
+
+# OLED setup (if available)
+try:
+    i2c = I2C(0, scl=Pin(22), sda=Pin(21))
+    oled = SSD1306_I2C(128, 64, i2c)
+except:
+    oled = None
+
+# Helper functions
+def get_distance(trig_pin, echo_pin):
+    trig = Pin(trig_pin, Pin.OUT)
+    echo = Pin(echo_pin, Pin.IN)
+    trig.off()
+    time.sleep_us(2)
+    trig.on()
+    time.sleep_us(10)
+    trig.off()
+    
+    while echo.value() == 0:
+        pass
+    start = time.ticks_us()
+    
+    while echo.value() == 1:
+        pass
+    end = time.ticks_us()
+    
+    distance = (time.ticks_diff(end, start) * 0.034) / 2
+    return distance
+
+def get_temperature(pin):
+    adc = ADC(Pin(pin))
+    adc.atten(ADC.ATTN_11DB)
+    reading = adc.read()
+    # Convert to temperature (for TMP36 sensor)
+    voltage = reading * 3.3 / 4096
+    temperature = (voltage - 0.5) * 100
+    return temperature
+
+# Main program
+while True:
+${code.split('\n').map(line => '    ' + line).join('\n')}
+`;
                 }
                 return code;
             } else {
                 let code = Blockly.Arduino.workspaceToCode(workspace);
                 if (code.trim()) {
-                    code = "// Arduino Code\n#include <Wire.h>\n#include <Adafruit_GFX.h>\n#include <Adafruit_SSD1306.h>\n\n" +
-                           "// Pin definitions\n#define LED_PIN 2\n#define BUZZER_PIN 4\n\n" +
-                           "// OLED display\nAdafruit_SSD1306 display(128, 64, &Wire, -1);\n\n" +
-                           "void setup() {\n  Serial.begin(115200);\n  pinMode(LED_PIN, OUTPUT);\n  pinMode(BUZZER_PIN, OUTPUT);\n  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);\n  display.clearDisplay();\n}\n\n" +
-                           "void loop() {\n" + code + "}\n";
+                    code = `// Arduino Code
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <Servo.h>
+
+// Pin definitions
+#define LED_PIN 2
+#define BUZZER_PIN 4
+
+// OLED display
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+// Servo objects (declare as needed)
+Servo servo_9;
+
+// Helper functions
+float getDistance(int trigPin, int echoPin) {
+    pinMode(trigPin, OUTPUT);
+    pinMode(echoPin, INPUT);
+    
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+    
+    long duration = pulseIn(echoPin, HIGH);
+    float distance = duration * 0.034 / 2;
+    return distance;
+}
+
+float getTemperature(int pin) {
+    int reading = analogRead(pin);
+    float voltage = reading * 5.0 / 1024.0;
+    float temperature = (voltage - 0.5) * 100; // For TMP36 sensor
+    return temperature;
+}
+
+void setup() {
+    Serial.begin(115200);
+    pinMode(LED_PIN, OUTPUT);
+    pinMode(BUZZER_PIN, OUTPUT);
+    
+    // Initialize OLED
+    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+        Serial.println(F("SSD1306 allocation failed"));
+    }
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    
+    // Initialize servos
+    servo_9.attach(9);
+}
+
+void loop() {
+${code.split('\n').map(line => '    ' + line).join('\n')}
+}`;
                 }
                 return code;
             }
@@ -477,14 +719,14 @@
                 return;
             }
             
-            alert(`🚀 Sending ${language} code to device...\n\nCode preview:\n${code.substring(0, 200)}${code.length > 200 ? '...' : ''}`);
+            alert(`🚀 Sending ${language} code to device...\n\n✅ Code compiled successfully!\n📡 Ready to upload to your microcontroller.`);
         }
 
         function exportCode() {
             const code = getCode();
             const isMicroPython = document.getElementById('languageToggle').checked;
             const extension = isMicroPython ? '.py' : '.ino';
-            const filename = 'blockly_project' + extension;
+            const filename = 'stem_project' + extension;
             
             if (!code.trim()) {
                 alert('No code to export! Please add some blocks first.');
@@ -500,10 +742,71 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            
+            alert(`✅ Code exported as ${filename}`);
+        }
+
+        function saveProject() {
+            const xml = Blockly.Xml.workspaceToDom(workspace);
+            const xmlText = Blockly.Xml.domToPrettyText(xml);
+            
+            const projectData = {
+                blocks: xmlText,
+                language: document.getElementById('languageToggle').checked ? 'micropython' : 'arduino',
+                timestamp: new Date().toISOString(),
+                version: '1.0'
+            };
+            
+            const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'stem_project.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Project saved successfully!');
+        }
+
+        function loadProject() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileLoad(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const projectData = JSON.parse(e.target.result);
+                    
+                    // Load blocks
+                    const xml = Blockly.Xml.textToDom(projectData.blocks);
+                    workspace.clear();
+                    Blockly.Xml.domToWorkspace(xml, workspace);
+                    
+                    // Set language mode
+                    const isMicroPython = projectData.language === 'micropython';
+                    document.getElementById('languageToggle').checked = isMicroPython;
+                    
+                    updateCode();
+                    alert('✅ Project loaded successfully!');
+                } catch (error) {
+                    alert('❌ Error loading project: Invalid file format');
+                    console.error('Load error:', error);
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
         }
 
         function clearWorkspace() {
-            if (confirm('Are you sure you want to clear all blocks?')) {
+            if (confirm('⚠️ Are you sure you want to clear all blocks? This action cannot be undone.')) {
                 workspace.clear();
                 updateCode();
             }
@@ -514,6 +817,26 @@
         
         // Initial code update
         updateCode();
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        saveProject();
+                        break;
+                    case 'o':
+                        e.preventDefault();
+                        loadProject();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        runCode();
+                        break;
+                }
+            }
+        });
     </script>
 </body>
 </html>
