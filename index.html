@@ -2,569 +2,231 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>🚀 STEM Coding Adventure! 🤖</title>
+    <title>STEM Blockly IDE</title>
     <script src="https://unpkg.com/blockly/blockly.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         html, body {
             height: 100%;
-            font-family: 'Nunito', sans-serif;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            overflow: hidden;
-        }
-
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            25% { background-position: 100% 50%; }
-            50% { background-position: 100% 100%; }
-            75% { background-position: 0% 100%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .stars {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .star {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            animation: twinkle 3s infinite;
-        }
-
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.3; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.2); }
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
         }
 
         #toolbar {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            background-size: 200% 200%;
             color: white;
-            padding: 20px;
+            padding: 15px;
             display: flex;
-            gap: 15px;
+            gap: 20px;
             align-items: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            position: relative;
-            z-index: 10;
-            animation: shimmer 3s ease-in-out infinite;
-        }
-
-        @keyframes shimmer {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        .toolbar-title {
-            font-family: 'Fredoka One', cursive;
-            font-size: 24px;
-            color: #fff;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            margin-right: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         #toolbar button {
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            border: none;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
             color: white;
-            padding: 12px 20px;
+            padding: 10px 20px;
             border-radius: 25px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 14px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        #toolbar button::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: conic-gradient(from 0deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7, #ff6b6b);
-            border-radius: 25px;
-            z-index: -1;
-            animation: rotate 2s linear infinite;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        #toolbar button:hover::before {
-            opacity: 1;
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
         }
 
         #toolbar button:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
         }
 
-        #toolbar button:active {
-            transform: translateY(-1px) scale(0.98);
-        }
-
-        .mode-toggle {
+        #toolbar label {
             display: flex;
             align-items: center;
-            gap: 10px;
-            background: rgba(255,255,255,0.1);
-            padding: 10px 15px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-        }
-
-        .mode-toggle label {
-            font-weight: bold;
+            gap: 8px;
             cursor: pointer;
         }
 
-        .toggle-switch {
-            position: relative;
-            width: 60px;
-            height: 30px;
-            background: #ccc;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .toggle-switch.active {
-            background: #4ecdc4;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 24px;
-            height: 24px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        .toggle-switch.active .toggle-slider {
-            transform: translateX(30px);
+        #toolbar input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
         }
 
         .container {
             display: flex;
-            height: calc(100vh - 90px);
-            position: relative;
-            z-index: 5;
+            height: calc(100vh - 70px);
         }
 
         #blocklyDiv {
             flex: 1;
             min-width: 60%;
-            border-radius: 20px 0 0 20px;
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(0,0,0,0.2);
         }
 
         #codePanel {
             flex: 0 0 40%;
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            color: #ecf0f1;
+            background: #1e1e1e;
+            color: #d4d4d4;
             display: flex;
             flex-direction: column;
-            border-radius: 0 20px 20px 0;
-            overflow: hidden;
-            box-shadow: 0 0 30px rgba(0,0,0,0.2);
         }
 
         #codeHeader {
-            background: linear-gradient(45deg, #3498db, #2980b9);
-            padding: 15px 20px;
+            background: #2d2d30;
+            padding: 10px 15px;
+            border-bottom: 1px solid #3e3e42;
             font-weight: bold;
-            font-size: 16px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #codeHeader::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-            animation: shine 3s infinite;
-        }
-
-        @keyframes shine {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
 
         #codeDisplay {
             flex: 1;
-            padding: 20px;
+            padding: 15px;
             font-family: 'Courier New', monospace;
             font-size: 14px;
             overflow: auto;
             white-space: pre;
-            line-height: 1.6;
-            background: rgba(0,0,0,0.1);
+            line-height: 1.4;
         }
 
-        .robot-helper {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            cursor: pointer;
-            animation: bounce 2s infinite, pulse 3s infinite;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-            z-index: 20;
-            transition: all 0.3s ease;
+        .code-arduino {
+            color: #4ec9b0;
         }
 
-        .robot-helper:hover {
-            transform: scale(1.1);
-            animation: bounce 0.5s infinite, pulse 1s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
-            50% { box-shadow: 0 8px 35px rgba(255,107,107,0.5); }
-        }
-
-        .success-animation {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 48px;
-            z-index: 1000;
-            pointer-events: none;
-            opacity: 0;
-        }
-
-        .success-animation.show {
-            animation: successPop 2s ease-out;
-        }
-
-        @keyframes successPop {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(1) translateY(-50px); }
-        }
-
-        .notification {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            background: linear-gradient(45deg, #4ecdc4, #44a08d);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 1000;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        /* Fun scrollbar */
-        ::-webkit-scrollbar {
-            width: 12px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(45deg, #4ecdc4, #ff6b6b);
-        }
-
-        /* Hidden elements */
-        input[type="file"] {
-            display: none;
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-            #toolbar {
-                flex-wrap: wrap;
-                padding: 15px;
-            }
-            
-            .toolbar-title {
-                font-size: 18px;
-                margin-right: 10px;
-            }
-            
-            #toolbar button {
-                padding: 10px 15px;
-                font-size: 12px;
-            }
-            
-            .container {
-                flex-direction: column;
-            }
-            
-            #blocklyDiv {
-                flex: 1;
-                border-radius: 20px 20px 0 0;
-            }
-            
-            #codePanel {
-                flex: 0 0 40%;
-                border-radius: 0 0 20px 20px;
-            }
+        .code-python {
+            color: #ffd700;
         }
     </style>
 </head>
 <body>
-    <div class="stars"></div>
-    
     <div id="toolbar">
-        <div class="toolbar-title">🚀 STEM Coding Adventure! 🤖</div>
-        <button onclick="runCode()" title="Run your awesome code!">
-            ▶️ Launch Code!
-        </button>
-        <button onclick="exportCode()" title="Save your creation!">
-            💾 Save Creation
-        </button>
-        <button onclick="clearWorkspace()" title="Start fresh!">
-            🗑️ Clear Space
-        </button>
-        <button onclick="saveProject()" title="Save your project!">
-            📦 Save Project
-        </button>
-        <button onclick="loadProject()" title="Load a project!">
-            📁 Open Project
-        </button>
-        <div class="mode-toggle">
-            <label>🐍 Python Mode</label>
-            <div class="toggle-switch" id="languageToggle" onclick="toggleLanguage()">
-                <div class="toggle-slider"></div>
-            </div>
-        </div>
+        <button onclick="runCode()">▶ Run Code</button>
+        <button onclick="exportCode()">💾 Export</button>
+        <button onclick="clearWorkspace()">🗑️ Clear</button>
+        <button onclick="saveProject()">💾 Save Project</button>
+        <button onclick="loadProject()">📁 Load Project</button>
+        <label>
+            <input type="checkbox" id="languageToggle" onchange="updateCode()">
+            MicroPython Mode
+        </label>
     </div>
 
     <div class="container">
         <div id="blocklyDiv"></div>
         <div id="codePanel">
-            <div id="codeHeader">✨ Your Magic Code ✨</div>
-            <div id="codeDisplay">// Drag colorful blocks to create amazing code! 🌈</div>
+            <div id="codeHeader">Generated Code</div>
+            <div id="codeDisplay">// Drag blocks to generate code</div>
         </div>
     </div>
 
-    <div class="robot-helper" onclick="showHelp()" title="Hi! I'm CodeBot! Click me for help! 🤖">
-        🤖
-    </div>
-
-    <div class="success-animation" id="successAnimation">🎉</div>
-    <div class="notification" id="notification"></div>
-
-    <input type="file" id="fileInput" accept=".json" onchange="handleFileLoad(event)">
+    <!-- Hidden file input for loading projects -->
+    <input type="file" id="fileInput" accept=".json" style="display: none" onchange="handleFileLoad(event)">
 
     <xml id="toolbox" style="display: none">
-        <category name="🔧 Cool Hardware" colour="20">
-            <block type="led_control"></block>
-            <block type="buzzer_control"></block>
-            <block type="button_read"></block>
-            <block type="analog_read"></block>
-            <block type="analog_write"></block>
-            <block type="servo_control"></block>
-            <block type="ultrasonic_sensor"></block>
-            <block type="temperature_sensor"></block>
-            <block type="oled_print">
-                <value name="TEXT">
-                    <block type="text">
-                        <field name="TEXT">Hello World!</field>
-                    </block>
-                </value>
-            </block>
-            <block type="delay_ms"></block>
-        </category>
-        <category name="🧠 Smart Logic" colour="210">
+        <category name="Control" colour="60">
+            <block type="start"></block>
+            <block type="wait_ms"></block>
+            <block type="repeat_times"></block>
+            <block type="forever"></block>
+            <block type="wait_until"></block>
             <block type="controls_if"></block>
-            <block type="logic_compare"></block>
-            <block type="logic_operation"></block>
-            <block type="logic_negate"></block>
-            <block type="logic_boolean"></block>
+            <block type="controls_ifelse"></block>
         </category>
-        <category name="🔄 Super Loops" colour="120">
-            <block type="controls_repeat_ext">
-                <value name="TIMES">
-                    <shadow type="math_number">
-                        <field name="NUM">10</field>
-                    </shadow>
-                </value>
-            </block>
-            <block type="controls_whileUntil"></block>
-            <block type="controls_for">
-                <value name="FROM">
-                    <shadow type="math_number">
-                        <field name="NUM">1</field>
-                    </shadow>
-                </value>
-                <value name="TO">
-                    <shadow type="math_number">
-                        <field name="NUM">10</field>
-                    </shadow>
-                </value>
-                <value name="BY">
-                    <shadow type="math_number">
-                        <field name="NUM">1</field>
-                    </shadow>
-                </value>
-            </block>
+        <category name="Input" colour="120">
+            <block type="read_button"></block>
+            <block type="read_pot"></block>
+            <block type="read_light"></block>
+            <block type="read_sound"></block>
+            <block type="read_touch"></block>
+            <block type="ultrasonic_cm"></block>
+            <block type="dht11_temp"></block>
+            <block type="dht11_hum"></block>
         </category>
-        <category name="🔢 Math Magic" colour="230">
-            <block type="math_number">
-                <field name="NUM">123</field>
-            </block>
-            <block type="math_arithmetic">
-                <value name="A">
-                    <shadow type="math_number">
-                        <field name="NUM">1</field>
-                    </shadow>
-                </value>
-                <value name="B">
-                    <shadow type="math_number">
-                        <field name="NUM">1</field>
-                    </shadow>
-                </value>
-            </block>
-            <block type="math_single">
-                <value name="NUM">
-                    <shadow type="math_number">
-                        <field name="NUM">9</field>
-                    </shadow>
-                </value>
-            </block>
+        <category name="Output" colour="20">
+            <block type="led_onoff"></block>
+            <block type="blink_led"></block>
+            <block type="set_rgb"></block>
+            <block type="play_tone"></block>
+            <block type="beep"></block>
         </category>
-        <category name="📝 Text Fun" colour="160">
-            <block type="text">
-                <field name="TEXT"></field>
-            </block>
-            <block type="text_join"></block>
-            <block type="text_length">
-                <value name="VALUE">
-                    <shadow type="text">
-                        <field name="TEXT">abc</field>
-                    </shadow>
-                </value>
-            </block>
+        <category name="Display" colour="260">
+            <block type="oled_print"></block>
+            <block type="oled_clear"></block>
+            <block type="oled_draw_line"></block>
+            <block type="oled_draw_rect"></block>
+            <block type="oled_draw_circle"></block>
+            <block type="oled_show_var"></block>
         </category>
-        <category name="📦 Variables" colour="330" custom="VARIABLE"></category>
-        <category name="⚙️ Functions" colour="290" custom="PROCEDURE"></category>
+        <category name="LED Matrix" colour="300">
+            <block type="matrix_set_pixel"></block>
+            <block type="matrix_clear"></block>
+            <block type="matrix_scroll_text"></block>
+            <block type="matrix_show_icon"></block>
+        </category>
+        <category name="Actuators" colour="40">
+            <block type="servo_angle"></block>
+            <block type="motor_run"></block>
+            <block type="motor_stop"></block>
+            <block type="relay_onoff"></block>
+        </category>
+        <category name="Math" colour="230">
+            <block type="math_arithmetic"></block>
+            <block type="math_map"></block>
+            <block type="math_random_range"></block>
+        </category>
+        <category name="Variables" colour="330" custom="VARIABLE"></category>
+        <category name="Functions" colour="290" custom="PROCEDURE"></category>
+        <category name="Communication" colour="330">
+            <block type="serial_print"></block>
+            <block type="bluetooth_send"></block>
+            <block type="i2c_write"></block>
+            <block type="spi_write"></block>
+        </category>
     </xml>
 
     <script>
-        // Create animated stars
-        function createStars() {
-            const starsContainer = document.querySelector('.stars');
-            for (let i = 0; i < 50; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.top = Math.random() * 100 + '%';
-                star.style.width = Math.random() * 3 + 1 + 'px';
-                star.style.height = star.style.width;
-                star.style.animationDelay = Math.random() * 3 + 's';
-                starsContainer.appendChild(star);
-            }
-        }
-        createStars();
-
-        // Define custom blocks (same as original but with fun tooltips)
+        // Define custom blocks
         Blockly.defineBlocksWithJsonArray([
+            // LED Control Block
             {
                 "type": "led_control",
-                "message0": "💡 Make LED %1",
+                "message0": "Set LED %1",
                 "args0": [
                     {
                         "type": "field_dropdown",
                         "name": "STATE",
                         "options": [
-                            ["✨ SHINE!", "HIGH"],
-                            ["😴 Sleep", "LOW"]
+                            ["ON", "HIGH"],
+                            ["OFF", "LOW"]
                         ]
                     }
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 20,
-                "tooltip": "Make your LED light up or turn off! ✨",
+                "tooltip": "Control LED on/off",
                 "helpUrl": ""
             },
+            // Buzzer Control Block
             {
                 "type": "buzzer_control",
-                "message0": "🔊 Make Buzzer %1",
+                "message0": "Set Buzzer %1",
                 "args0": [
                     {
                         "type": "field_dropdown",
                         "name": "STATE",
                         "options": [
-                            ["🎵 BEEP!", "HIGH"],
-                            ["🤫 Quiet", "LOW"]
+                            ["ON", "HIGH"],
+                            ["OFF", "LOW"]
                         ]
                     }
                 ],
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 20,
-                "tooltip": "Make some noise with your buzzer! 🎵",
+                "tooltip": "Control buzzer on/off",
                 "helpUrl": ""
             },
+            // Button Read Block
             {
                 "type": "button_read",
-                "message0": "🔘 Check button on pin %1",
+                "message0": "Read button pin %1",
                 "args0": [
                     {
                         "type": "field_number",
@@ -576,12 +238,13 @@
                 ],
                 "output": "Boolean",
                 "colour": 20,
-                "tooltip": "See if someone pressed the button! 👆",
+                "tooltip": "Read digital state of button",
                 "helpUrl": ""
             },
+            // Analog Read Block
             {
                 "type": "analog_read",
-                "message0": "📊 Read sensor on pin %1",
+                "message0": "Read analog pin %1",
                 "args0": [
                     {
                         "type": "field_dropdown",
@@ -598,12 +261,13 @@
                 ],
                 "output": "Number",
                 "colour": 20,
-                "tooltip": "Read numbers from sensors! 📈",
+                "tooltip": "Read analog value from pin",
                 "helpUrl": ""
             },
+            // Analog Write Block
             {
                 "type": "analog_write",
-                "message0": "⚡ Control pin %1 power %2",
+                "message0": "Write analog pin %1 value %2",
                 "args0": [
                     {
                         "type": "field_number",
@@ -623,12 +287,13 @@
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 20,
-                "tooltip": "Control how much power to give! ⚡",
+                "tooltip": "Write PWM value to pin (0-255)",
                 "helpUrl": ""
             },
+            // Servo Control Block
             {
                 "type": "servo_control",
-                "message0": "🔄 Move servo on pin %1 to %2 degrees",
+                "message0": "Move servo pin %1 to %2 degrees",
                 "args0": [
                     {
                         "type": "field_number",
@@ -648,12 +313,13 @@
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 20,
-                "tooltip": "Make your servo motor spin! 🔄",
+                "tooltip": "Control servo motor angle",
                 "helpUrl": ""
             },
+            // Ultrasonic Sensor Block
             {
                 "type": "ultrasonic_sensor",
-                "message0": "📏 Measure distance trig %1 echo %2",
+                "message0": "Ultrasonic distance trig pin %1 echo pin %2",
                 "args0": [
                     {
                         "type": "field_number",
@@ -672,12 +338,13 @@
                 ],
                 "output": "Number",
                 "colour": 20,
-                "tooltip": "Measure how far things are! 📏",
+                "tooltip": "Measure distance using ultrasonic sensor",
                 "helpUrl": ""
             },
+            // Temperature Sensor Block
             {
                 "type": "temperature_sensor",
-                "message0": "🌡️ Check temperature on pin %1",
+                "message0": "Temperature sensor pin %1",
                 "args0": [
                     {
                         "type": "field_dropdown",
@@ -694,12 +361,13 @@
                 ],
                 "output": "Number",
                 "colour": 20,
-                "tooltip": "See how hot or cold it is! 🌡️",
+                "tooltip": "Read temperature from sensor",
                 "helpUrl": ""
             },
+            // OLED Print Block
             {
                 "type": "oled_print",
-                "message0": "📺 Show on screen %1",
+                "message0": "Display on OLED %1",
                 "args0": [
                     {
                         "type": "input_value",
@@ -709,12 +377,13 @@
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 20,
-                "tooltip": "Write messages on your screen! 📺",
+                "tooltip": "Display text on OLED screen",
                 "helpUrl": ""
             },
+            // Delay Block
             {
                 "type": "delay_ms",
-                "message0": "⏰ Wait %1 milliseconds",
+                "message0": "Wait %1 milliseconds",
                 "args0": [
                     {
                         "type": "field_number",
@@ -726,16 +395,492 @@
                 "previousStatement": null,
                 "nextStatement": null,
                 "colour": 20,
-                "tooltip": "Take a little break! ⏰",
+                "tooltip": "Pause execution for specified milliseconds",
+                "helpUrl": ""
+            },
+            // Control Blocks
+            {
+                "type": "start",
+                "message0": "Start",
+                "nextStatement": null,
+                "colour": 60,
+                "tooltip": "Program entry point",
+                "helpUrl": ""
+            },
+            {
+                "type": "wait_ms",
+                "message0": "Wait %1 ms",
+                "args0": [
+                    { "type": "field_number", "name": "DELAY", "value": 1000, "min": 0 }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 60,
+                "tooltip": "Wait for specified milliseconds",
+                "helpUrl": ""
+            },
+            {
+                "type": "repeat_times",
+                "message0": "Repeat %1 times",
+                "args0": [
+                    { "type": "field_number", "name": "TIMES", "value": 10, "min": 1 }
+                ],
+                "message1": "do %1",
+                "args1": [
+                    { "type": "input_statement", "name": "DO" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 60,
+                "tooltip": "Repeat N times",
+                "helpUrl": ""
+            },
+            {
+                "type": "forever",
+                "message0": "Forever",
+                "message1": "do %1",
+                "args1": [
+                    { "type": "input_statement", "name": "DO" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 60,
+                "tooltip": "Loop forever",
+                "helpUrl": ""
+            },
+            {
+                "type": "wait_until",
+                "message0": "Wait until %1",
+                "args0": [
+                    { "type": "input_value", "name": "COND", "check": "Boolean" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 60,
+                "tooltip": "Wait until condition is true",
+                "helpUrl": ""
+            },
+            // Input Blocks
+            {
+                "type": "read_button",
+                "message0": "Button %1 pressed?",
+                "args0": [
+                    { "type": "field_number", "name": "PIN", "value": 3, "min": 0, "max": 50 }
+                ],
+                "output": "Boolean",
+                "colour": 120,
+                "tooltip": "Read button state",
+                "helpUrl": ""
+            },
+            {
+                "type": "read_pot",
+                "message0": "Potentiometer %1 value",
+                "args0": [
+                    { "type": "field_dropdown", "name": "PIN", "options": [["A0","A0"],["A1","A1"],["A2","A2"],["A3","A3"],["A4","A4"],["A5","A5"]] }
+                ],
+                "output": "Number",
+                "colour": 120,
+                "tooltip": "Read potentiometer value",
+                "helpUrl": ""
+            },
+            {
+                "type": "read_light",
+                "message0": "Light sensor %1 value",
+                "args0": [
+                    { "type": "field_dropdown", "name": "PIN", "options": [["A0","A0"],["A1","A1"],["A2","A2"],["A3","A3"],["A4","A4"],["A5","A5"]] }
+                ],
+                "output": "Number",
+                "colour": 120,
+                "tooltip": "Read light sensor value",
+                "helpUrl": ""
+            },
+            {
+                "type": "read_sound",
+                "message0": "Sound sensor %1 value",
+                "args0": [
+                    { "type": "field_dropdown", "name": "PIN", "options": [["A0","A0"],["A1","A1"],["A2","A2"],["A3","A3"],["A4","A4"],["A5","A5"]] }
+                ],
+                "output": "Number",
+                "colour": 120,
+                "tooltip": "Read sound sensor value",
+                "helpUrl": ""
+            },
+            {
+                "type": "read_touch",
+                "message0": "Touch sensor %1 pressed?",
+                "args0": [
+                    { "type": "field_number", "name": "PIN", "value": 2, "min": 0, "max": 50 }
+                ],
+                "output": "Boolean",
+                "colour": 120,
+                "tooltip": "Read touch sensor state",
+                "helpUrl": ""
+            },
+            {
+                "type": "ultrasonic_cm",
+                "message0": "Ultrasonic distance trig %1 echo %2 (cm)",
+                "args0": [
+                    { "type": "field_number", "name": "TRIG", "value": 7, "min": 0, "max": 50 },
+                    { "type": "field_number", "name": "ECHO", "value": 8, "min": 0, "max": 50 }
+                ],
+                "output": "Number",
+                "colour": 120,
+                "tooltip": "Ultrasonic distance in cm",
+                "helpUrl": ""
+            },
+            {
+                "type": "dht11_temp",
+                "message0": "DHT11 temp pin %1 (°C)",
+                "args0": [
+                    { "type": "field_number", "name": "PIN", "value": 5, "min": 0, "max": 50 }
+                ],
+                "output": "Number",
+                "colour": 120,
+                "tooltip": "DHT11 temperature",
+                "helpUrl": ""
+            },
+            {
+                "type": "dht11_hum",
+                "message0": "DHT11 humidity pin %1 (%)",
+                "args0": [
+                    { "type": "field_number", "name": "PIN", "value": 5, "min": 0, "max": 50 }
+                ],
+                "output": "Number",
+                "colour": 120,
+                "tooltip": "DHT11 humidity",
+                "helpUrl": ""
+            },
+            // Output Blocks
+            {
+                "type": "led_onoff",
+                "message0": "Turn LED pin %1 %2",
+                "args0": [
+                    { "type": "field_number", "name": "PIN", "value": 2, "min": 0, "max": 50 },
+                    { "type": "field_dropdown", "name": "STATE", "options": [["ON","HIGH"],["OFF","LOW"]] }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Turn LED on/off",
+                "helpUrl": ""
+            },
+            {
+                "type": "blink_led",
+                "message0": "Blink LED pin %1 every %2 ms",
+                "args0": [
+                    { "type": "field_number", "name": "PIN", "value": 2, "min": 0, "max": 50 },
+                    { "type": "field_number", "name": "INTERVAL", "value": 500, "min": 1 }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Blink LED at interval",
+                "helpUrl": ""
+            },
+            {
+                "type": "set_rgb",
+                "message0": "Set RGB (R %1, G %2, B %3)",
+                "args0": [
+                    { "type": "field_number", "name": "R", "value": 255, "min": 0, "max": 255 },
+                    { "type": "field_number", "name": "G", "value": 0, "min": 0, "max": 255 },
+                    { "type": "field_number", "name": "B", "value": 0, "min": 0, "max": 255 }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Set RGB LED color",
+                "helpUrl": ""
+            },
+            {
+                "type": "play_tone",
+                "message0": "Play tone %1 Hz for %2 ms on pin %3",
+                "args0": [
+                    { "type": "field_number", "name": "FREQ", "value": 440, "min": 1 },
+                    { "type": "field_number", "name": "DUR", "value": 500, "min": 1 },
+                    { "type": "field_number", "name": "PIN", "value": 4, "min": 0, "max": 50 }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Play tone on buzzer",
+                "helpUrl": ""
+            },
+            {
+                "type": "beep",
+                "message0": "%1 beep on pin %2",
+                "args0": [
+                    { "type": "field_dropdown", "name": "STATE", "options": [["Start","START"],["Stop","STOP"]] },
+                    { "type": "field_number", "name": "PIN", "value": 4, "min": 0, "max": 50 }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 20,
+                "tooltip": "Start/stop beep",
+                "helpUrl": ""
+            },
+            // Display Blocks (OLED)
+            {
+                "type": "oled_print",
+                "message0": "OLED print %1",
+                "args0": [
+                    { "type": "input_value", "name": "TEXT" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 260,
+                "tooltip": "Print text on OLED",
+                "helpUrl": ""
+            },
+            {
+                "type": "oled_clear",
+                "message0": "OLED clear display",
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 260,
+                "tooltip": "Clear OLED display",
+                "helpUrl": ""
+            },
+            {
+                "type": "oled_draw_line",
+                "message0": "OLED draw line from (%1,%2) to (%3,%4)",
+                "args0": [
+                    { "type": "field_number", "name": "X1", "value": 0 },
+                    { "type": "field_number", "name": "Y1", "value": 0 },
+                    { "type": "field_number", "name": "X2", "value": 127 },
+                    { "type": "field_number", "name": "Y2", "value": 63 }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 260,
+                "tooltip": "Draw line on OLED",
+                "helpUrl": ""
+            },
+            {
+                "type": "oled_draw_rect",
+                "message0": "OLED draw rect at (%1,%2) w %3 h %4",
+                "args0": [
+                    { "type": "field_number", "name": "X", "value": 0 },
+                    { "type": "field_number", "name": "Y", "value": 0 },
+                    { "type": "field_number", "name": "W", "value": 20 },
+                    { "type": "field_number", "name": "H", "value": 10 }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 260,
+                "tooltip": "Draw rectangle on OLED",
+                "helpUrl": ""
+            },
+            {
+                "type": "oled_draw_circle",
+                "message0": "OLED draw circle at (%1,%2) r %3",
+                "args0": [
+                    { "type": "field_number", "name": "X", "value": 64 },
+                    { "type": "field_number", "name": "Y", "value": 32 },
+                    { "type": "field_number", "name": "R", "value": 10 }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 260,
+                "tooltip": "Draw circle on OLED",
+                "helpUrl": ""
+            },
+            {
+                "type": "oled_show_var",
+                "message0": "OLED show variable %1",
+                "args0": [
+                    { "type": "input_value", "name": "VAR" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 260,
+                "tooltip": "Show variable on OLED",
+                "helpUrl": ""
+            },
+            // LED Matrix (8x8 MAX7219)
+            {
+                "type": "matrix_set_pixel",
+                "message0": "Matrix set pixel (%1,%2) %3",
+                "args0": [
+                    { "type": "field_number", "name": "X", "value": 0, "min": 0, "max": 7 },
+                    { "type": "field_number", "name": "Y", "value": 0, "min": 0, "max": 7 },
+                    { "type": "field_dropdown", "name": "STATE", "options": [["ON","ON"],["OFF","OFF"]] }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 300,
+                "tooltip": "Set LED matrix pixel",
+                "helpUrl": ""
+            },
+            {
+                "type": "matrix_clear",
+                "message0": "Matrix clear display",
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 300,
+                "tooltip": "Clear LED matrix",
+                "helpUrl": ""
+            },
+            {
+                "type": "matrix_scroll_text",
+                "message0": "Matrix scroll text %1",
+                "args0": [
+                    { "type": "input_value", "name": "TEXT" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 300,
+                "tooltip": "Scroll text on LED matrix",
+                "helpUrl": ""
+            },
+            {
+                "type": "matrix_show_icon",
+                "message0": "Matrix show icon %1",
+                "args0": [
+                    { "type": "field_dropdown", "name": "ICON", "options": [["Heart","HEART"],["Smile","SMILE"],["Arrow","ARROW"]] }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 300,
+                "tooltip": "Show icon on LED matrix",
+                "helpUrl": ""
+            },
+            // Actuators & Motor
+            {
+                "type": "servo_angle",
+                "message0": "Set servo pin %1 angle %2",
+                "args0": [
+                    { "type": "field_number", "name": "PIN", "value": 9, "min": 0, "max": 50 },
+                    { "type": "field_number", "name": "ANGLE", "value": 90, "min": 0, "max": 180 }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 40,
+                "tooltip": "Set servo angle",
+                "helpUrl": ""
+            },
+            {
+                "type": "motor_run",
+                "message0": "Run motor %1 at speed %2",
+                "args0": [
+                    { "type": "field_dropdown", "name": "MOTOR", "options": [["A","A"],["B","B"]] },
+                    { "type": "field_number", "name": "SPEED", "value": 100, "min": -255, "max": 255 }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 40,
+                "tooltip": "Run DC motor",
+                "helpUrl": ""
+            },
+            {
+                "type": "motor_stop",
+                "message0": "Stop motor %1",
+                "args0": [
+                    { "type": "field_dropdown", "name": "MOTOR", "options": [["A","A"],["B","B"]] }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 40,
+                "tooltip": "Stop DC motor",
+                "helpUrl": ""
+            },
+            {
+                "type": "relay_onoff",
+                "message0": "Relay pin %1 %2",
+                "args0": [
+                    { "type": "field_number", "name": "PIN", "value": 10, "min": 0, "max": 50 },
+                    { "type": "field_dropdown", "name": "STATE", "options": [["ON","HIGH"],["OFF","LOW"]] }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 40,
+                "tooltip": "Control relay",
+                "helpUrl": ""
+            },
+            // Logic & Math
+            {
+                "type": "math_map",
+                "message0": "map %1 from [%2-%3] to [%4-%5]",
+                "args0": [
+                    { "type": "input_value", "name": "VAL", "check": "Number" },
+                    { "type": "field_number", "name": "A1", "value": 0 },
+                    { "type": "field_number", "name": "A2", "value": 1023 },
+                    { "type": "field_number", "name": "B1", "value": 0 },
+                    { "type": "field_number", "name": "B2", "value": 100 }
+                ],
+                "output": "Number",
+                "colour": 230,
+                "tooltip": "Map value from one range to another",
+                "helpUrl": ""
+            },
+            {
+                "type": "math_random_range",
+                "message0": "random integer from %1 to %2",
+                "args0": [
+                    { "type": "input_value", "name": "MIN", "check": "Number" },
+                    { "type": "input_value", "name": "MAX", "check": "Number" }
+                ],
+                "output": "Number",
+                "colour": 230,
+                "tooltip": "Random integer in range",
+                "helpUrl": ""
+            },
+            // Communication
+            {
+                "type": "serial_print",
+                "message0": "Serial print %1",
+                "args0": [
+                    { "type": "input_value", "name": "TEXT" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 330,
+                "tooltip": "Print to serial",
+                "helpUrl": ""
+            },
+            {
+                "type": "bluetooth_send",
+                "message0": "Bluetooth send %1",
+                "args0": [
+                    { "type": "input_value", "name": "TEXT" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 330,
+                "tooltip": "Send via Bluetooth",
+                "helpUrl": ""
+            },
+            {
+                "type": "i2c_write",
+                "message0": "I2C write addr %1 data %2",
+                "args0": [
+                    { "type": "field_number", "name": "ADDR", "value": 0x3C },
+                    { "type": "input_value", "name": "DATA" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 330,
+                "tooltip": "I2C write",
+                "helpUrl": ""
+            },
+            {
+                "type": "spi_write",
+                "message0": "SPI write data %1",
+                "args0": [
+                    { "type": "input_value", "name": "DATA" }
+                ],
+                "previousStatement": null,
+                "nextStatement": null,
+                "colour": 330,
+                "tooltip": "SPI write",
                 "helpUrl": ""
             }
         ]);
 
-        // Initialize code generators (same as original)
+        // Initialize code generators
         Blockly.Arduino = Blockly.Arduino || {};
         Blockly.Python = Blockly.Python || {};
 
-        // Arduino generators (same as original)
+        // Arduino generators
         Blockly.Arduino['led_control'] = function(block) {
             var state = block.getFieldValue('STATE');
             return 'digitalWrite(LED_PIN, ' + state + ');\n';
@@ -790,7 +935,7 @@
             return `display.clearDisplay();\ndisplay.setCursor(0, 0);\ndisplay.print(${input});\ndisplay.display();\n`;
         };
 
-        // MicroPython generators (same as original)
+        // MicroPython generators
         Blockly.Python['led_control'] = function(block) {
             var state = block.getFieldValue('STATE') === 'HIGH' ? '1' : '0';
             return `led.value(${state})\n`;
@@ -826,7 +971,7 @@
         Blockly.Python['servo_control'] = function(block) {
             var pin = block.getFieldValue('PIN');
             var angle = block.getFieldValue('ANGLE');
-            var dutyValue = Math.round((angle / 180) * 77 + 40);
+            var dutyValue = Math.round((angle / 180) * 77 + 40); // Convert angle to duty cycle
             return `servo_${pin}.duty(${dutyValue})  # ${angle} degrees\n`;
         };
 
@@ -847,7 +992,6 @@
             return `oled.fill(0)\noled.text(str(${input}), 0, 0)\noled.show()\n`;
         };
 
-        
         // Initialize workspace
         const workspace = Blockly.inject('blocklyDiv', {
             toolbox: document.getElementById('toolbox'),
